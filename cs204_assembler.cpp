@@ -32,6 +32,11 @@ vector<string> parser(const string& instruction) {
     stringstream ss(cleanedInstruction);
     string temp_word;
 
+    // // Skip empty lines
+    // if (cleanedInstruction.find_first_not_of(" \t\n\v\f\r") == string::npos) {
+    //     return info; // Empty line, return empty vector
+    // }
+
     while (getline(ss, temp_word, ' ')) { // Tokenize by space
         if (temp_word.empty()) continue; // Skip empty tokens
 
@@ -164,6 +169,9 @@ map<string, vector<string>> I_map;
     // Getting asm code in vector
     while (getline(Myfile, text)) {
         vector<string> parsed_instruction = parser(text);
+        if (parsed_instruction.empty()) {
+        continue; // Skip empty lines
+       }
         string operation = parsed_instruction[0];
         if (find(R_operations.begin(), R_operations.end(), operation) != R_operations.end()) {
             vector<string> machine_code_vec = R_map[operation];
@@ -176,7 +184,7 @@ map<string, vector<string>> I_map;
             string rs2 = registerToBinary(parsed_instruction[3]);
 
             machine_code_R = func7 +rs2+ rs1+ func3+ rd+ opcode;
-            cout << "0x"<<instruction_idx*4<<" "<< text << ": " << binaryToHex(machine_code_R) << endl; 
+            cout << "0x"<<hex <<instruction_idx*4<<" "<< text << ": " << binaryToHex(machine_code_R) << endl; 
             instruction_idx++;
 
             // cout << "Machine Code for " << text << ": " << binaryToHex(machine_code_R) << endl; 
@@ -191,7 +199,7 @@ map<string, vector<string>> I_map;
 
             machine_code_I = imm+ rs1+ func3+ rd+ opcode;
 
-            cout << "0x"<<instruction_idx*4<<" "<< text << ": " << binaryToHex(machine_code_I) << endl; 
+            cout << "0x"<<hex <<instruction_idx*4<<" "<< text << ": " << binaryToHex(machine_code_I) << endl; 
             instruction_idx++;
 
         } else if (find(S_operations.begin(), S_operations.end(), operation) != S_operations.end()) {
@@ -208,7 +216,7 @@ map<string, vector<string>> I_map;
 
             machine_code_S = imm7+ rs2+ rs1+ func3+ imm5+ opcode;
 
-            cout << "0x"<<instruction_idx*4<< " "<<text << ": " << binaryToHex(machine_code_S) << endl; 
+            cout << "0x"<<hex <<instruction_idx*4<< " "<<text << ": " << binaryToHex(machine_code_S) << endl; 
             instruction_idx++;
 
         } else if (find(SB_operations.begin(), SB_operations.end(), operation) != SB_operations.end()) {
@@ -223,7 +231,7 @@ map<string, vector<string>> I_map;
             string imm5 = imm.substr(7,5);
 
             machine_code_SB = imm7+ rs2+ rs1+ func3+ imm5+ opcode;
-            cout << "0x"<<instruction_idx*4<<" "<< text << ": " << binaryToHex(machine_code_SB) << endl; 
+            cout << "0x"<<hex <<instruction_idx*4<<" "<< text << ": " << binaryToHex(machine_code_SB) << endl; 
             instruction_idx++;
 
         } else if (find(U_operations.begin(), U_operations.end(), operation) != U_operations.end()) {
@@ -236,7 +244,7 @@ map<string, vector<string>> I_map;
 
             machine_code_U = imm20+ rd+ opcode;
 
-            cout << "0x"<<instruction_idx*4<<" "<< text << ": " << binaryToHex(machine_code_U) << endl; 
+            cout << "0x"<<hex <<instruction_idx*4<<" "<< text << ": " << binaryToHex(machine_code_U) << endl; 
             instruction_idx++;
 
         } else if (find(UJ_operations.begin(), UJ_operations.end(), operation) != UJ_operations.end()) {
@@ -249,7 +257,7 @@ map<string, vector<string>> I_map;
 
             machine_code_UJ = imm20+ rd+ opcode;
 
-            cout << "0x"<<instruction_idx*4<<" "<< text << ": " << binaryToHex(machine_code_UJ) << endl; 
+            cout << "0x"<<hex <<instruction_idx*4<<" "<< text << ": " << binaryToHex(machine_code_UJ) << endl; 
             instruction_idx++;
 
         } else {
