@@ -160,7 +160,7 @@ map<string, vector<string>> I_map;
     // File handling
     string text;
     ifstream Myfile("code.txt");
-
+    int instruction_idx=0;
     // Getting asm code in vector
     while (getline(Myfile, text)) {
         vector<string> parsed_instruction = parser(text);
@@ -176,8 +176,10 @@ map<string, vector<string>> I_map;
             string rs2 = registerToBinary(parsed_instruction[3]);
 
             machine_code_R = func7 +rs2+ rs1+ func3+ rd+ opcode;
+            cout << "0x"<<instruction_idx*4<<" "<< text << ": " << binaryToHex(machine_code_R) << endl; 
+            instruction_idx++;
 
-            cout << "Machine Code for " << text << ": " << binaryToHex(machine_code_R) << endl; 
+            // cout << "Machine Code for " << text << ": " << binaryToHex(machine_code_R) << endl; 
         }else if (find(I_operations.begin(), I_operations.end(), operation) != I_operations.end()) {
             vector<string> machine_code_vec = I_map[operation];
             string machine_code_I;
@@ -189,7 +191,9 @@ map<string, vector<string>> I_map;
 
             machine_code_I = imm+ rs1+ func3+ rd+ opcode;
 
-            cout << "Machine Code for " << text << ": " << binaryToHex(machine_code_I) << endl; 
+            cout << "0x"<<instruction_idx*4<<" "<< text << ": " << binaryToHex(machine_code_I) << endl; 
+            instruction_idx++;
+
         } else if (find(S_operations.begin(), S_operations.end(), operation) != S_operations.end()) {
             vector<string> machine_code_vec = S_map[operation];
             string machine_code_S;
@@ -197,12 +201,16 @@ map<string, vector<string>> I_map;
             string func3 =machine_code_vec[1];
             string rs1 = registerToBinary(parsed_instruction[1]);
             string rs2 = registerToBinary(parsed_instruction[3]);
-            string imm7 = immediateToBinary(parsed_instruction[2],7);
-            string imm5 = immediateToBinary(parsed_instruction[2],5);
+            string imm = immediateToBinary(parsed_instruction[2],12);
+            string imm7 = imm.substr(0,7);
+            string imm5 = imm.substr(7,5);
+            
 
             machine_code_S = imm7+ rs2+ rs1+ func3+ imm5+ opcode;
 
-            cout << "Machine Code for " << text << ": " << binaryToHex(machine_code_S) << endl;
+            cout << "0x"<<instruction_idx*4<< " "<<text << ": " << binaryToHex(machine_code_S) << endl; 
+            instruction_idx++;
+
         } else if (find(SB_operations.begin(), SB_operations.end(), operation) != SB_operations.end()) {
             vector<string> machine_code_vec = SB_map[operation];
             string machine_code_SB;
@@ -210,12 +218,14 @@ map<string, vector<string>> I_map;
             string func3 =machine_code_vec[1];
             string rs1 = registerToBinary(parsed_instruction[1]);
             string rs2 = registerToBinary(parsed_instruction[2]);
-            string imm7 = immediateToBinary(parsed_instruction[3],7);
-            string imm5 = immediateToBinary(parsed_instruction[3],5);
+            string imm = immediateToBinary(parsed_instruction[3],12);
+            string imm7 = imm.substr(0,7);
+            string imm5 = imm.substr(7,5);
 
             machine_code_SB = imm7+ rs2+ rs1+ func3+ imm5+ opcode;
+            cout << "0x"<<instruction_idx*4<<" "<< text << ": " << binaryToHex(machine_code_SB) << endl; 
+            instruction_idx++;
 
-            cout << "Machine Code for " << text << ": " << binaryToHex(machine_code_SB) << endl;
         } else if (find(U_operations.begin(), U_operations.end(), operation) != U_operations.end()) {
             vector<string> machine_code_vec = U_map[operation];
             string machine_code_U;
@@ -226,7 +236,9 @@ map<string, vector<string>> I_map;
 
             machine_code_U = imm20+ rd+ opcode;
 
-            cout << "Machine Code for " << text << ": " << binaryToHex(machine_code_U) << endl;
+            cout << "0x"<<instruction_idx*4<<" "<< text << ": " << binaryToHex(machine_code_U) << endl; 
+            instruction_idx++;
+
         } else if (find(UJ_operations.begin(), UJ_operations.end(), operation) != UJ_operations.end()) {
             vector<string> machine_code_vec = UJ_map[operation];
             string machine_code_UJ;
@@ -237,7 +249,9 @@ map<string, vector<string>> I_map;
 
             machine_code_UJ = imm20+ rd+ opcode;
 
-            cout << "Machine Code for " << text << ": " <<binaryToHex(machine_code_UJ) << endl;
+            cout << "0x"<<instruction_idx*4<<" "<< text << ": " << binaryToHex(machine_code_UJ) << endl; 
+            instruction_idx++;
+
         } else {
             cout << "Unknown instruction: " << text << endl;
         }
