@@ -11,6 +11,15 @@
 
 using namespace std;
 
+bool endsWithColon(const std::string& str) {
+    if (str.empty()) {
+        return false; // Empty string cannot end with a colon
+    }
+    char lastChar = str.back();
+    return lastChar == ':';
+}
+
+
 string binaryToHex(string binary) {
     // Convert binary string to integer
     bitset<32> bits(binary);
@@ -164,16 +173,33 @@ map<string, vector<string>> I_map;
 
     // File handling
     string text;
+    string segment_type;
     ifstream Myfile("code.txt");
     int instruction_idx=0;
+    map<vector<string>, int> instructionPCMap;
+    vector<vector<string>> data_segment;
     // Getting asm code in vector
     while (getline(Myfile, text)) {
-        vector<string> parsed_instruction = parser(text);
+
+        if (text.find(".text") != string::npos) {
+            segment_type = "text";
+            continue;
+        } else if (text.find(".data") != string::npos) {
+            segment_type = "data";
+            continue;
+        }
+        // } else if (segment_type.empty()) {
+        //     continue; // Skip lines before encountering any segment type
+        // }
+
+        if (segment_type == "text") {
+             vector<string> parsed_instruction = parser(text);
         if (parsed_instruction.empty()) {
         continue; // Skip empty lines
        }
-        string operation = parsed_instruction[0];
-        if (find(R_operations.begin(), R_operations.end(), operation) != R_operations.end()) {
+             instructionPCMap[parsed_instruction]=instruction_idx; // this helps to find the instruction corresponding to the pc  in jump type instr
+             string operation = parsed_instruction[0];
+              if (find(R_operations.begin(), R_operations.end(), operation) != R_operations.end()) {
             vector<string> machine_code_vec = R_map[operation];
             string machine_code_R;
             string opcode =machine_code_vec[0];
@@ -260,9 +286,25 @@ map<string, vector<string>> I_map;
             cout << "0x"<<hex <<instruction_idx*4<<" "<< text << ": " << binaryToHex(machine_code_UJ) << endl; 
             instruction_idx++;
 
-        } else {
+        }
+        //  else if(operation==".text"){
+
+        // }else if(operation==".data"){
+
+        // }
+        else if(endsWithColon(operation)){
+
+        }else {
             cout << "Unknown instruction: " << text << endl;
         }
+            // text_segment.push_back(text);
+        } else if (segment_type == "data") {
+            // data_segment.push_back(text);
+            data_segment.push_back(parser(text));
+        }
+    
+       
+       
     }
 
     return 0;
