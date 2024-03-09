@@ -54,10 +54,41 @@ vector<string> parser(const string& instruction) {
     
     string cleanedInstruction = instruction.substr(0, instruction.find("#")); // Remove comments
     if(cleanedInstruction.empty()) return info;
+
+
+    int col_start1=cleanedInstruction.find(':');
+    int end=cleanedInstruction.length();
+    if(col_start1!=string::npos){
+    string str=cleanedInstruction;
+    string part1;
+    string part2=str.substr(col_start1+1,end-col_start1+1);
+    size_t i = 0;
+        while (i < str.size() && str[i] == ' ') {
+        str.erase(i,1);
+        i++;
+    }
+    // cout<<"string now is : "<<str<<endl;
+    while (i < str.size() && str[i] != ' ') {
+        part1 += str[i];
+        i++;
+    }
+    
+
+    // Merge the two parts with a colon
+    // cout<<"Part1: "<<part1<<endl;
+    cleanedInstruction = part1 + ": " + part2;
+
+    // cout<<"herr it is"<<endl;
+    // cout<<"cleaned instruction is -  "<<cleanedInstruction<<endl;
+
+    }
+    // Iterate over the string and remove extra spaces before ":"
+
+
     stringstream ss(cleanedInstruction);
     string temp_word;
 
-  
+    
 
     while (getline(ss, temp_word, ' ')) { // Tokenize by space    
         
