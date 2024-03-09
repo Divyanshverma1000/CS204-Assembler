@@ -9,33 +9,30 @@
 #include <iomanip>
 #include <stdexcept>
 
+// included necessary libraries to work with
+
 using namespace std;
 
 
-// My first iteration over the instructions i need to verify whether the instruction is valid or not before incrementing instruction index2 which is responsible
-// for correct indexing of labels
-// currently i am doing it using number of arguments
-// improve it
 
 
+map<string,int> label_map;           //map which maps labels to their instruction number in which they appear or line number
+bool isvalid=false;                  //used later to  determine whether instruction is valid or not
+int instruction_index=0;             //it is instruction no counter for second iteration of  all instructions
+int instruction_index2=0;            //it is instruction no counter for first iteration  of  all instructions
+bool is_iteration2_active=false;
 
 
-
-
-
-
-
-map<string,int> label_map;
-bool isvalid=false;
-int instruction_index=0;
-int instruction_index2=0;
-
+//integer to hexadecimal  (used for getting pc in hexadecimal)
 string intToHex(int number) {
     stringstream stream;
-    stream << hex << setw(8) << setfill('0') << number;
-    return "0x"+stream.str();
+    stream << hex << number;
+    return "0x" + stream.str();
 }
 
+
+
+//convert binary string to hexadecimal (this is for 32 bit machine code)
 string binaryToHex(string binary) {
     // Convert binary string to integer
     bitset<32> bits(binary);
@@ -50,7 +47,8 @@ string binaryToHex(string binary) {
 }
 
 
-
+//Parser function which returns useful fields to the main in vector
+//for eg add x1,x2,x3   parser will return [add x1 x2 x3] in vector 
 vector<string> parser(const string& instruction) {
     vector<string> info;
     
@@ -58,33 +56,55 @@ vector<string> parser(const string& instruction) {
     if(cleanedInstruction.empty()) return info;
     stringstream ss(cleanedInstruction);
     string temp_word;
-    // cout<<cleanedInstruction<<endl;
 
-    while (getline(ss, temp_word, ' ')) { // Tokenize by space
-        // cout<<"some"<<endl;
-        // cout<<temp_word<<endl;
+  
+
+    while (getline(ss, temp_word, ' ')) { // Tokenize by space    
+        
+        //here tempword contains the token separated by space  and it collects them one by one in loop
+
         if (temp_word.empty()) continue; // Skip empty tokens
-        size_t col_start = temp_word.find(':');
+        
+        
+        size_t col_start = temp_word.find(':');  // gives position of colon ':'
         
         // when there is just label and no instruction in same line it gets handled here
-        if(col_start!=string::npos){
-            string label_part=temp_word.substr(0,col_start+1);   //error handled here for wrond bta address
-            label_map[label_part]={instruction_index2};
-            //  instruction_index++; will thinkk about it
-            info.push_back(temp_word);
-            continue; 
+        /*eg    for:
+                add x1 x2 x3 
+         */
+
+        if(col_start!=string::npos){  //check whether ':' colon was there or not in tempword
+            //when there isn't any space between : and operation it label needs to be separated and it is done here
+            //eg label:add x1 x2 x3
+            string label_part=temp_word.substr(0,col_start+1);   //error handled here for wrong bta address
+            if(!is_iteration2_active){
+            label_map[label_part]={instruction_index2};          //here mapping the label with instruction index
+            }
+                    
+            info.push_back(temp_word);                           //even if it is combined word like for:add   it will be pushed it will be dealt 
+                                                                 //at the end of loop
+
+            // cout<<label_part<<"\t"<<instruction_index2<<endl;                                                    
+            continue; //no need to go below
         }
-   
+        
+    
+        //for load store instructions stores the indices of opening and closing parenthesis
         size_t imm_start = temp_word.find('(');
         size_t imm_end = temp_word.find(')');
 
+
+       //condition says that if both opening and closing parenthesis are there and opening comes before closing then go inside if
+       //indirectly saying it is load store instruction
         if (imm_start != string::npos && imm_end != string::npos && imm_start < imm_end) {
             // S-format instruction: extract imm and rs2 from something like "-4(x11)"
+            //eg format is : lw x1 imm(rs2)
             string imm = temp_word.substr(0, imm_start);
             string rs2 = temp_word.substr(imm_start + 1, imm_end - imm_start - 1);
             if (!imm.empty()) info.push_back(imm); // Adding immediate value #give syntax error here
             if (!rs2.empty()) info.push_back(rs2); // Adding rs2
         } else {
+            //it enters in the else part to remove if delimiter is comma  eg add x1,x2,x3
             // Handle comma as a secondary delimiter within tokens
             stringstream tokenStream(temp_word);
             string subToken;
@@ -92,35 +112,40 @@ vector<string> parser(const string& instruction) {
                 if (!subToken.empty()) info.push_back(subToken); // Adding operands and opcode without commas
             }
         }
+        
     }
     
     // when there is instructions and label on same line it gets handled here
+    //here we extract the label: part  from label:operation ( when there is no space between colon and operation)
     if(info.size()>1&& info[0].find(':')!=string::npos) {
              
              int end=info[0].length();
              int col_start=info[0].find(':');
 
-             if(info[0].length()!=col_start+1){
+             if(info[0].length()!=col_start+1){   //it enters in if in actual there is no space between colon and operation
                      info[0]=info[0].substr(col_start+1,end-col_start+1);
                     //  cout<<info[0];
              }
-             else{
+             else{                               //it enters else part it there is space between colon and operation
              info.erase(info.begin());
              }
         }
     
-    if(info.size()>1) isvalid=true;
+    if(info.size()>1) isvalid=true;              //weak condition to check if instruction is valid or not
    
-    // cout<<"it leaves"<<endl;
     return info;
 }
 
 
+//converts register to binary  eg x1 will becomes 00001 in binary
 string registerToBinary(string reg) {
     int reg_num = stoi(reg.substr(1)); // Extract the number part and convert to integer
     string binary = bitset<5>(reg_num).to_string(); // Convert to 5-bit binary representation
     return binary;
 }
+
+
+//converts immediate to binary (signed representation)           IMP-NOTE:it may give error in I format case as it required unsigned representation of immediate
 
 string immediateToBinary(const string& immediate, int bits) {
     // Convert immediate string to integer
@@ -137,7 +162,19 @@ string immediateToBinary(const string& immediate, int bits) {
 }
 
 
+
+
+
+
+//main starts here
+
+
+
 int main() {
+
+
+    //stores all the operatoions in corresponding format vector
+
     vector<string> R_operations = {
         "add", "and", "or", "sll", "slt", "sra", "srl", "sub", "xor", "mul", "div", "rem"
     };
@@ -161,10 +198,11 @@ int main() {
         "jal"
     };
 
+    //Here we map eachh operation with its corresponding opcode funct3 and funct7
 
     map<string, vector<string>> R_map;
-
     // Fill the map with opcode, funct3, and funct7 values for each R operation
+
     R_map["add"] = {"0110011", "000", "0000000"};
     R_map["and"] = {"0110011", "111", "0000000"};
     R_map["or"]  = {"0110011", "110", "0000000"};
@@ -220,40 +258,38 @@ map<string, vector<string>> I_map;
     ifstream Myfile("code.txt");
     vector<string> instruction_set;
 
+   //First iteration where we will map each label with its corresponding instruction index
+
+
     while(getline(Myfile,text)){
         vector<string> parsed_instruction1 = parser(text);
         instruction_set.push_back(text);
-        if(isvalid) instruction_index2++;  
+        if(isvalid){ instruction_index2++; } 
         isvalid=false;  
-        // cout<<instruction_index2<<endl;
     }
-
-
-  
     // for (const auto& pair : label_map) {
     //     std::cout << "Key: " << pair.first << ", Value: " << pair.second << std::endl;
     // }
+
+is_iteration2_active=true;
 int i=0;
-// cout<<"Here once"<<endl;
-  // Seek to the beginning of the file
+
+// Seek to the beginning of the file
+
 Myfile.clear();  // Clear any error flags
 Myfile.seekg(0);  // Seek to the beginning of the file
-    //    cout<<"it works"<<endl;
+
+
+
     // Getting asm code in vector
+    //traversing each instruction in instruction set again (Second interation)
     for(string text:instruction_set) {
-        // cout<<"it enters :"<<endl
+        
         if(text.empty()) continue;
-        // cout<<"iteration nu: "<<i<<endl;
-        // cout<<text<<endl; 
-        // cout<<"index"<<endl;
         vector<string> parsed_instruction = parser(text);
-        // cout<<"returned"<<endl;
-        // cout<<"Text to be parsed  :  "<<text<<endl;
-        // cout<<"it is here"<<endl;
-        // cout<<parsed_instruction[0]<<endl;
     
         string operation = parsed_instruction[0];
-        // cout<<operation<<endl;
+        
         if (find(R_operations.begin(), R_operations.end(), operation) != R_operations.end()) {
             vector<string> machine_code_vec = R_map[operation];
             string machine_code_R;
@@ -268,9 +304,8 @@ Myfile.seekg(0);  // Seek to the beginning of the file
             string pc=intToHex(instruction_index*4);
 
             cout <<pc<<" "<<text<< ": " << binaryToHex(machine_code_R) << endl; 
-            // cout<<"ins index at R: "<<instruction_index<<endl;
             instruction_index++;
-            // cout<<"Entered here"<<endl;
+            
         }else if (find(I_operations.begin(), I_operations.end(), operation) != I_operations.end()) {
             vector<string> machine_code_vec = I_map[operation];
             string machine_code_I;
@@ -283,7 +318,7 @@ Myfile.seekg(0);  // Seek to the beginning of the file
             machine_code_I = imm+ rs1+ func3+ rd+ opcode;
             string pc=intToHex(instruction_index*4);
 
-            cout <<pc<<" "<<text<< ": " << binaryToHex(machine_code_I) << endl;  //Venus is giving wrong machine code for this instruction
+            cout <<pc<<" "<<text<< ": " << binaryToHex(machine_code_I) << endl; 
             instruction_index++;
         } else if (find(S_operations.begin(), S_operations.end(), operation) != S_operations.end()) {
             vector<string> machine_code_vec = S_map[operation];
@@ -293,21 +328,21 @@ Myfile.seekg(0);  // Seek to the beginning of the file
             string rs1 = registerToBinary(parsed_instruction[1]);
             string rs2 = registerToBinary(parsed_instruction[3]);
             string imm = immediateToBinary(parsed_instruction[2],12);
-            // cout<<"imm values: "<<imm<<endl;
+    
             string imm7=imm.substr(0,7);
 
             // cout<<"imm7 values: "<<imm7<<endl;
 
             string imm5 = imm.substr(7,5);
             // cout<<"imm5 values: "<<imm5<<endl;
-            // cout<<"imm5 :"<<binaryToHex(imm5)<<endl;                                      #some doubt heres
+            // cout<<"imm5 :"<<binaryToHex(imm5)<<endl;                                      
 
             machine_code_S = imm7 + rs2+ rs1+ func3+ imm5+ opcode;
             string pc=intToHex(instruction_index*4);
 
             cout <<pc<<" "<<text<< ": " << binaryToHex(machine_code_S) << endl;
             instruction_index++;
-        } else if (find(SB_operations.begin(), SB_operations.end(), operation) != SB_operations.end()) {//Venus is giving wrong machine code for this instruction
+        } else if (find(SB_operations.begin(), SB_operations.end(), operation) != SB_operations.end()) {
             vector<string> machine_code_vec = SB_map[operation];
             string machine_code_SB;
             string opcode =machine_code_vec[0];
@@ -346,7 +381,7 @@ Myfile.seekg(0);  // Seek to the beginning of the file
             machine_code_U = imm20+ rd+ opcode;
             string pc=intToHex(instruction_index*4);
 
-            cout <<pc<<" "<<text<< ": " << binaryToHex(machine_code_U) << endl;
+            cout <<pc<<" "<<text<< ":" << binaryToHex(machine_code_U) << endl;
             instruction_index++;
         } else if (find(UJ_operations.begin(), UJ_operations.end(), operation) != UJ_operations.end()) {
             vector<string> machine_code_vec = UJ_map[operation];
@@ -357,7 +392,6 @@ Myfile.seekg(0);  // Seek to the beginning of the file
             string key=parsed_instruction[2]+":";
 
             int newimm=(label_map[key]-instruction_index)*2;
-            
             // cout<<"instruction index: "<<instruction_index<<endl;
             // cout<<"label index: "<<label_map[key]<<endl;
 
