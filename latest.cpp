@@ -66,8 +66,9 @@ vector<string> parser(const string& instruction) {
         if (temp_word.empty()) continue; // Skip empty tokens
         size_t col_start = temp_word.find(':');
         
+        // when there is just label and no instruction in same line it gets handled here
         if(col_start!=string::npos){
-             label_map[temp_word]={instruction_index2};
+            label_map[temp_word]={instruction_index2};
             //  instruction_index++; will thinkk about it
             info.push_back(temp_word);
             continue; 
@@ -91,8 +92,21 @@ vector<string> parser(const string& instruction) {
             }
         }
     }
+    
+    // when there is instructions and label on same line it gets handled here
+    if(info.size()>1&& info[0].find(':')!=string::npos) {
+             
+             int end=info[0].length();
+             int col_start=info[0].find(':');
 
-    if(info.size()>1&& info[0].find(':')!=string::npos) info.erase(info.begin());
+             if(info[0].length()!=col_start+1){
+                     info[0]=info[0].substr(col_start+1,end-col_start+1);
+                     cout<<info[0];
+             }
+             else{
+             info.erase(info.begin());
+             }
+        }
     
     if(info.size()>1) isvalid=true;
    
