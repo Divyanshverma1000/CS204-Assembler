@@ -68,7 +68,8 @@ vector<string> parser(const string& instruction) {
         
         // when there is just label and no instruction in same line it gets handled here
         if(col_start!=string::npos){
-            label_map[temp_word]={instruction_index2};
+            string label_part=temp_word.substr(0,col_start+1);   //error handled here for wrond bta address
+            label_map[label_part]={instruction_index2};
             //  instruction_index++; will thinkk about it
             info.push_back(temp_word);
             continue; 
@@ -101,7 +102,7 @@ vector<string> parser(const string& instruction) {
 
              if(info[0].length()!=col_start+1){
                      info[0]=info[0].substr(col_start+1,end-col_start+1);
-                     cout<<info[0];
+                    //  cout<<info[0];
              }
              else{
              info.erase(info.begin());
