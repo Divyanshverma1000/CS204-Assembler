@@ -41,15 +41,16 @@ vector<string> all_operations = {"add", "and", "or", "sll", "slt", "sra", "srl",
                                          };
 
 
-// utility functions 
-// ########
-//intTohex
-//hexToint
-//binaryTohex
-//isNumber
-//parser (handels pretty much  allm )
-//registerToBinary
-//immediateTobinary
+
+
+
+
+
+
+
+
+
+
 
 
 //integer to hexadecimal  (used for getting pc in hexadecimal)
@@ -98,6 +99,11 @@ bool isNumber(const string& str) {
         return false;
     }
 }
+
+
+
+
+
 
 
 
@@ -238,6 +244,21 @@ vector<string> parser(const string& instruction,vector<vector<uint8_t>>& memory)
 
     }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
         //for load store instructions stores the indices of opening and closing parenthesis
         size_t imm_start = temp_word.find('(');
         size_t imm_end = temp_word.find(')');
@@ -290,25 +311,10 @@ vector<string> parser(const string& instruction,vector<vector<uint8_t>>& memory)
 
 //converts register to binary  eg x1 will becomes 00001 in binary
 string registerToBinary(string reg) {
-    // Check if the registr start with 'x' and hasa valid number
-    if (reg.size() < 2 || reg[0] != 'x') {
-        throw invalid_argument("Invald regiter format. register must start with 'x'.");
-    }
-
-    try {
-        int reg_num = stoi(reg.substr(1)); // Extract the number part and convert to integer
-        // Check if the register number is within the valid range (0 to 31)
-        if (reg_num < 0 || reg_num > 31) {
-            throw out_of_range("Register number out of range. Valid range: 0 to 31.");
-        }
-        string binary = bitset<5>(reg_num).to_string();
-        return binary;
-    } catch (const invalid_argument& e) {
-        throw invalid_argument("Invalid register format. Register number must be numeric.");
-    }
+    int reg_num = stoi(reg.substr(1)); // Extract the number part and convert to integer
+    string binary = bitset<5>(reg_num).to_string(); // Convert to 5-bit binary representation
+    return binary;
 }
-
-
 
 
 //converts immediate to binary (signed representation)           IMP-NOTE:it may give error in I format case as it required unsigned representation of immediate
@@ -338,6 +344,9 @@ string immediateToBinary(const string& immediate, int bits) {
 
 int main() {
 
+
+    ofstream  outputfile("output.mc");
+   
     vector<vector<uint8_t>> memory;
 
     //stores all the operatoions in corresponding format vector
@@ -422,7 +431,7 @@ map<string, vector<string>> I_map;
 
     // File handling
     string text;
-    ifstream Myfile("code.asm");
+    ifstream Myfile("code.txt");
     vector<string> instruction_set;
 
    //First iteration where we will map each label with its corresponding instruction index
@@ -462,7 +471,7 @@ Myfile.seekg(0);  // Seek to the beginning of the file
         
         if (find(R_operations.begin(), R_operations.end(), operation) != R_operations.end()) {
             if(size!=4){
-                cout<<"\n\tR-Format error Please put a valid format\n\n";
+               outputfile<<"\n\tR-Format error Please put a valid format\n\n";
                 break;
   
             }
@@ -478,13 +487,13 @@ Myfile.seekg(0);  // Seek to the beginning of the file
             machine_code_R = func7 +rs2+ rs1+ func3+ rd+ opcode;
             string pc=intToHex(instruction_index*4);
 
-            cout <<pc<<" "<<text<< ": " << binaryToHex(machine_code_R) << endl; 
+           outputfile <<pc<<" "<<text<< ": " << binaryToHex(machine_code_R) << endl; 
             instruction_index++;
             
         }else if (find(I_operations.begin(), I_operations.end(), operation) != I_operations.end()) {
 
             if(size!=4){
-                cout<<"\n\tI-Format error Please put a valid format\n\n";
+               outputfile<<"\n\tI-Format error Please put a valid format\n\n";
                 break;
             }
             vector<string> machine_code_vec = I_map[operation];
@@ -498,12 +507,18 @@ Myfile.seekg(0);  // Seek to the beginning of the file
             machine_code_I = imm+ rs1+ func3+ rd+ opcode;
             string pc=intToHex(instruction_index*4);
 
-            cout <<pc<<" "<<text<< ": " << binaryToHex(machine_code_I) << endl; 
+           outputfile <<pc<<" "<<text<< ": " << binaryToHex(machine_code_I) << endl; 
             instruction_index++;
         } else if (find(S_operations.begin(), S_operations.end(), operation) != S_operations.end()) {
 
-            if(size!=4&&size!=5){
-                cout<<"\n\tS-Format error Please put a valid format\n\n";
+            if(size!=4 && size!=5){
+               outputfile<<"\n\tS-Format error Please put a valid format\n\n";
+            //    cout<<"Size : "<<size<<endl;
+            //    cout<<"Parsed i 0: "<<parsed_instruction[0]<<endl;
+            //    cout<<"Parsed i 1: "<<parsed_instruction[1]<<endl;
+            //    cout<<"Parsed i 2: "<<parsed_instruction[2]<<endl;
+            //    cout<<"Parsed i 3: "<<parsed_instruction[3]<<endl;
+            //    cout<<"Parsed i 4: "<<parsed_instruction[4]<<endl;
                 break;
             }
             vector<string> machine_code_vec = S_map[operation];
@@ -516,7 +531,7 @@ Myfile.seekg(0);  // Seek to the beginning of the file
     
             string imm7=imm.substr(0,7);
             
-            // cout<<"imm7 values: "<<imm7<<endl;
+            //outputfile<<"imm7 values: "<<imm7<<endl;
 
             string imm5 = imm.substr(7,5);
             // cout<<"imm5 values: "<<imm5<<endl;
@@ -525,12 +540,12 @@ Myfile.seekg(0);  // Seek to the beginning of the file
             machine_code_S = imm7 + rs2+ rs1+ func3+ imm5+ opcode;
             string pc=intToHex(instruction_index*4);
 
-            cout <<pc<<" "<<text<< ": " << binaryToHex(machine_code_S) << endl;
+           outputfile <<pc<<" "<<text<< ": " << binaryToHex(machine_code_S) << endl;
             instruction_index++;
         } else if (find(SB_operations.begin(), SB_operations.end(), operation) != SB_operations.end()) {
 
             if(size!=4){
-                cout<<"\n\tSB-Format error Please put a valid format\n\n";
+               outputfile<<"\n\tSB-Format error Please put a valid format\n\n";
                 break;
             }
             vector<string> machine_code_vec = SB_map[operation];
@@ -566,12 +581,12 @@ Myfile.seekg(0);  // Seek to the beginning of the file
             // cout<<"Machine code: "<<machine_code_SB<<endl;
             string pc=intToHex(instruction_index*4);
 
-            cout <<pc<<" "<<text<< ": " << binaryToHex(machine_code_SB) << endl;
+           outputfile <<pc<<" "<<text<< ": " << binaryToHex(machine_code_SB) << endl;
             instruction_index++;
         } else if (find(U_operations.begin(), U_operations.end(), operation) != U_operations.end()) {
 
             if(size!=3){
-                cout<<"\n\tU-Format error Please put a valid format\n\n";
+               outputfile<<"\n\tU-Format error Please put a valid format\n\n";
                 break;
             }
 
@@ -600,12 +615,12 @@ Myfile.seekg(0);  // Seek to the beginning of the file
             machine_code_U = imm20+ rd+ opcode;
             string pc=intToHex(instruction_index*4);
 
-            cout <<pc<<" "<<text<< ":" << binaryToHex(machine_code_U) << endl;
+           outputfile <<pc<<" "<<text<< ":" << binaryToHex(machine_code_U) << endl;
             instruction_index++;
         } else if (find(UJ_operations.begin(), UJ_operations.end(), operation) != UJ_operations.end()) {
 
             if(size!=3){
-                cout<<"\n\tUJ-Format error Please put a valid format\n\n";
+               outputfile<<"\n\tUJ-Format error Please put a valid format\n\n";
                 break;
   
             
@@ -634,7 +649,7 @@ Myfile.seekg(0);  // Seek to the beginning of the file
             machine_code_UJ = imm20+ rd+ opcode;
             string pc=intToHex(instruction_index*4);
             
-            cout <<pc<<" "<<text<< ": " <<binaryToHex(machine_code_UJ) << endl;
+           outputfile <<pc<<" "<<text<< ": " <<binaryToHex(machine_code_UJ) << endl;
             instruction_index++;
         } else {
             // cout << "Unknown instruction: " <<instruction_index<<" "<<text<< endl;
@@ -648,8 +663,8 @@ Myfile.seekg(0);  // Seek to the beginning of the file
 
 
 //div
-   cout<<"revOrder Stack-(hex)"<<endl;
-   cout<<"-------------------------------------"<<endl;
+  outputfile<<"revOrder Stack"<<endl;
+  outputfile<<"-------------------------------------"<<endl;
     unsigned int start_address = 0x10000000;
     reverse(memory.begin(), memory.end());
     int total=0;
@@ -658,7 +673,7 @@ Myfile.seekg(0);  // Seek to the beginning of the file
      }
     int rem=total%4;
     int k = (rem == 0) ? total/4 : total/4 + 1;
-    cout<<"total : "<<total<<endl;
+   outputfile<<"total : "<<total<<endl;
     int flag=-1;
     
     int re=1;
@@ -667,29 +682,29 @@ Myfile.seekg(0);  // Seek to the beginning of the file
         for (uint8_t byte : block) {
         unsigned int address = start_address + ((k-1) * 4);
         if((re%4-1)==0){
-        cout << hex << "0x" << setw(8) << setfill('0') << address <<"  ";
+       outputfile << hex << "0x" << setw(8) << setfill('0') << address <<"  ";
         }
             if(flag<0){
                 if(rem==0){
                 }else{
 
             for(int i=0;i<4-rem;i++){
-                cout<<"X ";
+               outputfile<<"X ";
             flag++;
             re++;
             }
                 }
             }
-            cout << static_cast<int>(byte) << " ";
+           outputfile << static_cast<int>(byte) << " ";
             if(re%4==0){
-                cout<<endl;
+               outputfile<<endl;
                 k--;
             }
             re++;   
         }
     
     }
-    cout << endl;
+   outputfile << endl;
  
 //div
 
@@ -698,3 +713,21 @@ Myfile.seekg(0);  // Seek to the beginning of the file
     return 0;
 }
 
+/*
+#include <iostream>
+#include <iomanip>
+
+int main() {
+    unsigned int start_address = 0x10000000;
+    int num_addresses = 10;
+    int bytes_per_address = 4;
+
+    for (int i = 0; i < num_addresses; ++i) {
+        unsigned int address = start_address + (i * bytes_per_address);
+        std::cout << std::hex << "0x" << std::setw(8) << std::setfill('0') << address << std::endl;
+    }
+
+    return 0;
+}
+
+*/
