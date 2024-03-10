@@ -461,10 +461,17 @@ Myfile.seekg(0);  // Seek to the beginning of the file
         if(text.empty()) continue;
         vector<string> parsed_instruction = parser(text,memory);
         if(parsed_instruction.empty()) continue;
+
+        int size=parsed_instruction.size();
     
         string operation = parsed_instruction[0];
         
         if (find(R_operations.begin(), R_operations.end(), operation) != R_operations.end()) {
+            if(size!=4){
+                cout<<"\n\tR-Format error Please put a valid format\n\n";
+                break;
+  
+            }
             vector<string> machine_code_vec = R_map[operation];
             string machine_code_R;
             string opcode =machine_code_vec[0];
@@ -481,6 +488,11 @@ Myfile.seekg(0);  // Seek to the beginning of the file
             instruction_index++;
             
         }else if (find(I_operations.begin(), I_operations.end(), operation) != I_operations.end()) {
+
+            if(size!=4){
+                cout<<"\n\tI-Format error Please put a valid format\n\n";
+                break;
+            }
             vector<string> machine_code_vec = I_map[operation];
             string machine_code_I;
             string opcode =machine_code_vec[0];
@@ -495,6 +507,11 @@ Myfile.seekg(0);  // Seek to the beginning of the file
             cout <<pc<<" "<<text<< ": " << binaryToHex(machine_code_I) << endl; 
             instruction_index++;
         } else if (find(S_operations.begin(), S_operations.end(), operation) != S_operations.end()) {
+
+            if(size!=4){
+                cout<<"\n\tS-Format error Please put a valid format\n\n";
+                break;
+            }
             vector<string> machine_code_vec = S_map[operation];
             string machine_code_S;
             string opcode =machine_code_vec[0];
@@ -517,6 +534,11 @@ Myfile.seekg(0);  // Seek to the beginning of the file
             cout <<pc<<" "<<text<< ": " << binaryToHex(machine_code_S) << endl;
             instruction_index++;
         } else if (find(SB_operations.begin(), SB_operations.end(), operation) != SB_operations.end()) {
+
+            if(size!=4){
+                cout<<"\n\tSB-Format error Please put a valid format\n\n";
+                break;
+            }
             vector<string> machine_code_vec = SB_map[operation];
             string machine_code_SB;
             string opcode =machine_code_vec[0];
@@ -553,6 +575,12 @@ Myfile.seekg(0);  // Seek to the beginning of the file
             cout <<pc<<" "<<text<< ": " << binaryToHex(machine_code_SB) << endl;
             instruction_index++;
         } else if (find(U_operations.begin(), U_operations.end(), operation) != U_operations.end()) {
+
+            if(size!=3){
+                cout<<"\n\tU-Format error Please put a valid format\n\n";
+                break;
+            }
+
             vector<string> machine_code_vec = U_map[operation];
             string machine_code_U;
             string opcode =machine_code_vec[0];
@@ -581,6 +609,13 @@ Myfile.seekg(0);  // Seek to the beginning of the file
             cout <<pc<<" "<<text<< ":" << binaryToHex(machine_code_U) << endl;
             instruction_index++;
         } else if (find(UJ_operations.begin(), UJ_operations.end(), operation) != UJ_operations.end()) {
+
+            if(size!=3){
+                cout<<"\n\tUJ-Format error Please put a valid format\n\n";
+                break;
+  
+            
+            }
             vector<string> machine_code_vec = UJ_map[operation];
             string machine_code_UJ;
             string opcode =machine_code_vec[0];
