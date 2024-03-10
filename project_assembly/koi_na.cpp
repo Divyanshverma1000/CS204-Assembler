@@ -502,7 +502,7 @@ Myfile.seekg(0);  // Seek to the beginning of the file
             instruction_index++;
         } else if (find(S_operations.begin(), S_operations.end(), operation) != S_operations.end()) {
 
-            if(size!=4){
+            if(size!=4&&size!=5){
                 cout<<"\n\tS-Format error Please put a valid format\n\n";
                 break;
             }
