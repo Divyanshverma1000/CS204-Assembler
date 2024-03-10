@@ -50,7 +50,37 @@ string binaryToHex(string binary) {
 
     return hex;
 }
+// Function to check if an instruction is valid
+bool isValidInstruction(const string& operation) {
+    return find(all_operations.begin(), all_operations.end(), operation) != all_operations.end();
+}
 
+// Function to handle errors during instruction processing
+void handleInstructionError(const string& instruction, const string& errorMessage) {
+    cerr << "Error in instruction: " << instruction << "\n" << errorMessage << endl;
+    // You can choose to exit the program or take appropriate action based on the error.
+}
+
+// ...
+
+// Inside the main loop where instructions are processed
+for (string text : instruction_set) {
+    if (text.empty()) continue;
+    vector<string> parsed_instruction = parser(text, memory);
+    if (parsed_instruction.empty()) continue;
+
+    string operation = parsed_instruction[0];
+
+    // Check if the instruction is valid
+    if (!isValidInstruction(operation)) {
+        handleInstructionError(text, "Invalid instruction.");
+        continue;  // Skip processing invalid instructions
+    }
+
+    // ... rest of the processing for valid instructions
+}
+
+// ...
 
 vector<string> parser(const string& instruction) {
     vector<string> info;
