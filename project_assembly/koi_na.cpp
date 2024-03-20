@@ -431,7 +431,7 @@ map<string, vector<string>> I_map;
 
     // File handling
     string text;
-    ifstream Myfile("code.txt");
+    ifstream Myfile("code.asm");
     vector<string> instruction_set;
 
    //First iteration where we will map each label with its corresponding instruction index
