@@ -1,0 +1,162 @@
+
+(If any mistake found then please suggest and correct it)
+
+
+Understanding the Project:
+
+We will be given a trace like:
+0x0    0x00000293    addi x5 x0 0    li t0, 0 # i = 0
+0x4    0x00A28333    add x6 x5 x10    add t1, t0, a0 # Add the byte offset for str[i]
+0x8    0x00030303    lb x6 0(x6)    lb t1, 0(t1) # Dereference str[i]
+0xc    0x00030663    beq x6 x0 12    beqz t1, 1f # if str[i] == 0, break for loop
+0x10    0x00128293    addi x5 x5 1    addi t0, t0, 1 # Add 1 to our iterator
+
+A trace is the sequence of instructions followed during the actual execution of the program 
+
+
+here label will be replaced by the target address:
+  if branch is successfull then target address will be replaced by the address of label
+  else it will be program counter+4 (next instruction)
+
+what do we need to do?
+
+Given this trace we have to  find the accuracy of  the methods mentioned:
+so let us understand the methods first:
+
+1)Always taken:
+      I am not sure but according to me here  we will assume that every branch 
+      is always taken means the  target address will always be that of the label
+      and if it is not that of label we will count it as miss otherwise 
+      it  is a  hit
+      we will do this for every branch instruction:
+      and calculate the accurace using  the following
+      accuracy= (no of hits/total predictions)*100
+      
+
+
+2)Always not  taken:
+      It is just opposite of Always taken here we will assume that branch is always
+      not  taken and thus calculate the accuracy in the same way
+
+
+
+3)1 bit-Dynamic branch predictor:
+     
+     See here we will have to look the decision one iteration before ,
+     means
+     i) if last time the branch was taken then we will predict 
+     current branch to  be taken
+     prediction=taken
+     ii)if last time the  branch was not taken then we will  predict
+     current decision to be not taken 
+     prediction=Not taken
+    
+
+       In the both cases we have predicted either taken or not taken 
+       How will we know whether our prediction was right or wrong?
+              We have Trace :)
+                 A[[[0x8  beq x1 x2 12
+                     0x12
+                     0x16
+                 B[[[0x8  beq x1 x2 12
+                     0xrandom
+                     0xrandom
+                     0xrandom
+                 C[[[0x8  beq x1 x2 4
+     
+            
+
+               A) See here the branch instruction  target address is 12 means branch  was taken
+                now as we are visting this the first time we don't need to check prediction 
+                however for  the next visit of the same instruction 
+                we will predict Taken because earlier it was taken
+                so prediction=Taken
+    
+               B) See that  here Branch target address is 12 so it is Taken 
+               Now our prediction from A was Taken so the current branch and predicted
+               branch are same hence it is a  hit
+               prediction=Taken
+           
+               C)See here that the target address is 4 means the branch is not Taken 
+               it is  pointing to next instruction
+               our prediction was "Taken" and current  branch is "Not taken"
+               so  we  have a miss
+               for  the next iteration
+               prediction=Not Taken
+               and similary this will go on 
+
+                    Each time  we get a hit we will increase do hit++ and for miss miss++
+                    finally we will divide it by total predictions made
+                    hence we will get accuracy for given branch instruction
+
+
+                        Note :Here  we talked about accuracy of single branch  instruction
+                              similary we have to sum  up accuracy of all the branch instructions
+                              and give the average
+
+
+
+4)2-bit  Dynamic branch predictor:
+  
+It is same as 1-bit  Dynamic branch predictor just the difference
+is following:
+if 
+Last branch ,current branch=Taken,Taken   prediction=Taken    
+Last branch ,current branch=Not-Taken,Not-Taken   prediction= Not Taken    
+Last branch ,current branch=Not-Taken,Taken   prediction= Weakly Not Taken    
+Last branch ,current branch=Taken,Not-Taken   prediction=Weakly Taken    
+          
+    
+Here instead of looking one iteration back we have to  see 2 iteration back
+
+
+
+
+Now the whole story question?
+How do  we know past iteration  values? 
+Branch Target buffer in Action :)
+ Create a branch target buffer which looks like following:
+(Refer to 1bit branch predictor example)
+ Branch PC         Target address          Branch History
+ Ox8               12                         T T NT 
+
+ here we will store the these things and check correctness of the prediction using the branch History
+
+ BIG-question: 2 ways  to implement Branch target buffer 
+              
+               i) We can create a file which we can update every time (Not efficient)
+               ii) We can store it in some data structure like map 
+                     Map  of what?
+                        key= PC 
+                        value=( Target address,vector<string> History )
+                    Finally we print these things in file in above given format
+
+        
+
+So What is our plan :)
+Note  that now  we have  to completely work on the trace forget the past
+read the text file which contains the trace
+when encountered a branch instruction put its  instruction index  as key  and  (branch target , vector<string> history, int prediction) as value
+if it is first visit then no value will  be there in history  however we  will change it depending upon the current decision whether branch was taken or not
+int prediction will be set to  1 if it is taken and 0 if not taken
+
+now for the second visit of the same branch instruction we will check the condtiton in the main function if it is true  means branch is  taken 
+and we will compare it with the prediction in the map for that instruction so  if it is true then next prediction will be same as earlier one and if they  are not 
+same then change the prediction in the map 
+
+
+
+
+//new question?
+Do we need to have status of registers? No we don't need
+Process:
+when we encounter a branch instruction first time:
+i)we will enter its pc and store the target address
+ii)if target address is 4 (means next immediate instruction) we will store NT or 0 in branch history vector
+iii) if target address isn't 4 (means some other instruction) we will store T or 1 in branch history vector
+
+when we encounter a branch instruction second time:
+i)we will check if its current target address is matching with earlier one or not 
+         :if it is matching with earlier one then store the same value in branch history vector and do hit++
+         :if it isn't matching then store the current value in branch history vector and do miss++ 
+         
